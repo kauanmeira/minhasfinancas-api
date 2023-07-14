@@ -5,6 +5,7 @@ import com.kauanmeira.minhasfinancas.model.entities.Usuario;
 import com.kauanmeira.minhasfinancas.model.impl.UsuarioServiceImpl;
 import com.kauanmeira.minhasfinancas.model.repositories.UsuarioRepository;
 import com.kauanmeira.minhasfinancas.model.services.UsuarioService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,6 +35,22 @@ public class UsuarioServiceTest {
     @BeforeEach
     public void setUp(){
         service = new UsuarioServiceImpl(repository);
+    }
+    @Test
+    public void deveAutenticarUmUsuarioComSucesso(){
+        //cenario
+        String email = "email";
+        String senha ="senha";
+
+        Usuario usuario = Usuario.builder().email(email).senha(senha).id(1l).build();
+        Mockito.when(repository.findByEmail(email)).thenReturn(Optional.of(usuario));
+
+        //acao
+        Usuario result = service.autenticar(email,senha);
+
+        //verificacao
+        Assertions.assertNotNull(result);
+
     }
 
     @Test
