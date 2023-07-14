@@ -1,5 +1,6 @@
 package com.kauanmeira.minhasfinancas.services;
 
+import com.kauanmeira.minhasfinancas.exceptions.ErroAutenticacao;
 import com.kauanmeira.minhasfinancas.exceptions.RegraNegocioException;
 import com.kauanmeira.minhasfinancas.model.entities.Usuario;
 import com.kauanmeira.minhasfinancas.model.impl.UsuarioServiceImpl;
@@ -17,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,25 +35,39 @@ public class UsuarioServiceTest {
     private UsuarioRepository repository;
 
     @BeforeEach
-    public void setUp(){
+    public void setUp() {
         service = new UsuarioServiceImpl(repository);
     }
+
     @Test
-    public void deveAutenticarUmUsuarioComSucesso(){
+    public void deveAutenticarUmUsuarioComSucesso() {
         //cenario
         String email = "email";
-        String senha ="senha";
+        String senha = "senha";
 
         Usuario usuario = Usuario.builder().email(email).senha(senha).id(1l).build();
         Mockito.when(repository.findByEmail(email)).thenReturn(Optional.of(usuario));
 
         //acao
-        Usuario result = service.autenticar(email,senha);
+        Usuario result = service.autenticar(email, senha);
 
         //verificacao
         Assertions.assertNotNull(result);
 
     }
+
+    @Test
+    public void deveLancarErroQuandoSenhaForInvalida() {
+        // cenário
+        String senha = "senha";
+        Usuario usuario = Usuario.builder().email("usuario@gmail.com").senha(senha).build();
+        Mockito.when(repository.findByEmail(Mockito.anyString())).thenReturn(Optional.of(usuario));
+
+        // ação e verificação
+        ErroAutenticacao exception = assertThrows(ErroAutenticacao.class, () -> service.autenticar("usuario@gmail.com", "123"));
+        assertThat(exception).isInstanceOf(ErroAutenticacao.class).hasMessage("Senha inválida");
+    }
+
 
     @Test
     public void deveValidarEmail() {
@@ -63,11 +79,25 @@ public class UsuarioServiceTest {
     }
 
     @Test
+    public void deveLancarErroQuandoNaoEncontrarUsuarioCadastradoComOEmailInformado() {
+        // cenário
+        Mockito.when(repository.findByEmail(Mockito.anyString())).thenReturn(Optional.empty());
+
+        // ação e verificação
+        Throwable exception = assertThrows(ErroAutenticacao.class, () -> service.autenticar("usuario@gmail.com", "senha"));
+        assertThat(exception).isInstanceOf(ErroAutenticacao.class).hasMessage("Usuário não encontrado para o email informado.");
+    }
+
+
+
+
+    @Test
     public void deveLancarErroAoValidarEmailQuandoExistirEmailCadastrado() {
         // cenário
         Mockito.when(repository.existsByEmail(Mockito.anyString())).thenReturn(true);
 
         // ação e verificação
         assertThrows(RegraNegocioException.class, () -> service.validarEmail("email@example.com"));
+
     }
 }
