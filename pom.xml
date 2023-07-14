@@ -59,11 +59,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>framework-one</groupId>
-            <artifactId>framework-one</artifactId>
-            <version>0.10.2</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>
